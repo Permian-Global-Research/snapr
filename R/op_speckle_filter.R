@@ -28,13 +28,14 @@
 #' @param anSize The Adaptive Neighbourhood size Valid interval is (1, 200].
 #' Default value is '50'.
 #' @details
-#' Descrscription from `gpt Speckle-Filter` -h`: Speckle Reduction Source
-#' Options: -Ssource=<file> Sets source 'source' to <filepath>. This is a
-#' mandatory source.
+#' Descrscription from '`gpt {operator} -h`':
+#'
+#' "Speckle Reduction Source Options: -Ssource=<file> Sets source 'source' to
+#' <filepath>. This is a mandatory source."
 #' @import xml2
 #' @return xml2 xml graph
 #' @export
-speckle_filter <- function(
+op_speckle_filter <- function(
     operator_id,
     operator_sources,
     sourceBandNames = NULL,
@@ -84,5 +85,15 @@ speckle_filter <- function(
   xml_add_child(parameters, "targetWindowSizeStr", gpt_args$targetWindowSizeStr)
   xml_add_child(parameters, "sigmaStr", gpt_args$sigmaStr)
   xml_add_child(parameters, "anSize", gpt_args$anSize)
-  return(op_xml)
+  snap_op_speckle_filter <- S7::new_class(
+    "snap_op_speckle_filter",
+    parent = snap_operator
+  )
+  snap_op_speckle_filter(
+    operator = "Speckle-Filter",
+    operator_id = operator_id,
+    operator_sources = operator_sources,
+    created_by = rlang::current_fn(),
+    xml_graph = as.character(op_xml)
+  )
 }

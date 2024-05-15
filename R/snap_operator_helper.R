@@ -3,12 +3,12 @@
 #' @param gpt_path character path to the gpt executable
 #' @param check_operator logical check if the operator is valid
 #' @param node logical return the node or the full xml graph
-#' @return snap_operator_helper S7 object with the following slots:
+#' @return snap_operator_help S7 object with the following slots:
 #' operator, description, parameters, and xml_graph
 #' @import S7
 #' @export
 #'
-snap_operator_helper <- S7::new_class("snap_operator_helper",
+snap_operator_help <- S7::new_class("snap_operator_help",
   properties = list(
     operator = class_character,
     description = class_character,
@@ -54,11 +54,11 @@ snap_operator_helper <- S7::new_class("snap_operator_helper",
 )
 
 #' print method for snap operator helper object
-#' @param x snap_operator_helper object
+#' @param x snap_operator_help object
 #' @param xml logical print the xml graph
-#' @name print.snap_operator_helper
-method(print, snap_operator_helper) <- function(x, xml = FALSE) {
-  cat("<snap_operator_helper>\n")
+#' @name print.snap_operator_help
+method(print, snap_operator_help) <- function(x, xml = FALSE) {
+  cat("<snap_operator_help>\n")
   cat("\n")
   cat(paste(
     pheader("Opreator:"),
@@ -87,13 +87,13 @@ method(print, snap_operator_helper) <- function(x, xml = FALSE) {
 
 
 #' show xml graph method for snap operator helper object
-#' @param x snap_operator_helper object
-#' @name snap_operator_helper
+#' @param x snap_operator_help object
+#' @name snap_operator_help
 #' @export
 show_xml <- new_generic("show_xml", "x")
-#' @name snap_operator_helper
+#' @name snap_operator_help
 #' @export
-method(show_xml, snap_operator_helper) <- function(x) {
+method(show_xml, snap_operator_help) <- function(x) {
   cli::style_bold("XML process graph: \n\n") |>
     cli::col_yellow() |>
     cat()
@@ -104,24 +104,7 @@ method(show_xml, snap_operator_helper) <- function(x) {
   invisible()
 }
 
-#' function for checking if the xml graph can be read
-#' @param x character xml graph
-#' @return logical if the xml graph can be read
-#' @keywords internal
-#' @noRd
-check_xml_read <- function(x) {
-  result <- tryCatch(
-    xml2::read_xml(x),
-    error = function(e) NULL
-  )
 
-  # Check if an error occurred
-  if (is.null(result)) {
-    return(FALSE)
-  } else {
-    return(TRUE)
-  }
-}
 
 
 #' function for constrcuting a snap operator helper object
@@ -140,34 +123,53 @@ get_operator_help <- function(
   if (check_operator) {
     operator <- rlang::arg_match(operator, get_operators()$operator)
   }
-  gpt_help <- system2(gpt_path,
+
+  suppressWarnings(gpt_help <- system2(gpt_path,
     args = c("-h", operator, "2>/dev/null"),
     stdout = TRUE, stderr = FALSE
-  )
+  ))
+  if (length(gpt_help) == 0) {
+    cli::cli_abort(
+      c(
+        "x" = "There is an issue with the snap gpt executable, operator name or operator.",
+        "i" = "To reproduce this error run: ",
+        cli::code_highlight('system2("{gpt_path}", c("{operator}", "-h"))')
+      )
+    )
+  }
 
   param_n <- which(gpt_help == "Parameter Options:")
   graph_xml_n <- which(gpt_help == "Graph XML Format:")
   desc_n <- which(gpt_help == "Description:")
 
-  params <- join_multilines(gpt_help[(param_n + 1):(graph_xml_n - 1)])
+  if (length(param_n) == 1) {
+    params <- join_multilines(gpt_help[(param_n + 1):(graph_xml_n - 1)])
 
-  param_descr <- gpt_help[(desc_n + 1):(param_n - 1)] |>
-    paste(collapse = "\n") |>
-    stringr::str_squish()
+    param_descr <- gpt_help[(desc_n + 1):(param_n - 1)] |>
+      paste(collapse = "\n") |>
+      stringr::str_squish()
 
-
-  paramstib <- params |>
-    tibble::as_tibble() |>
-    dplyr::mutate(
-      param = stringr::str_extract(value, "(?<=-P)[^\\s]*"),
-      class = stringr::str_extract(param, "(?<=<)[^>]*"),
-      param = stringr::str_extract(param, "^[^=]*"),
-      description = stringr::str_squish(
-        stringr::str_extract(value, "(?<=\\>\\s).*")
-      )
-    ) |>
-    dplyr::select(param, class, description)
-
+    paramstib <- params |>
+      tibble::as_tibble() |>
+      dplyr::mutate(
+        param = stringr::str_extract(value, "(?<=-P)[^\\s]*"),
+        class = stringr::str_extract(param, "(?<=<)[^>]*"),
+        param = stringr::str_extract(param, "^[^=]*"),
+        description = stringr::str_squish(
+          stringr::str_extract(value, "(?<=\\>\\s).*")
+        )
+      ) |>
+      dplyr::select(param, class, description)
+  } else if (length(param_n) == 0) {
+    paramstib <- tibble::tibble(param = NA, class = NA, description = NA)
+    param_descr <- gpt_help[(desc_n + 1):(graph_xml_n - 1)] |>
+      paste(collapse = "\n") |>
+      stringr::str_squish()
+  } else {
+    cli::cli_abort(
+      c("x" = "Multiple Parameter tile lines found in gpt {operator} -h output")
+    )
+  }
 
   xml_graph <- gpt_help[(graph_xml_n + 1):(length(gpt_help))] |>
     paste(collapse = "\n") |>

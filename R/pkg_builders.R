@@ -1,13 +1,13 @@
 #' A function to write R functions for given xml graphs.
 #' This function creates a function that takes the arguments and xml from
-#' a snap_operator_helper_bject to create a function that can then be used to
+#' a snap_operator_help_bject to create a function that can then be used to
 #' build gpt graphs.
 #' @import glue
 #' @keywords internal
 #' @export
 build_xml_engine <- function(operator, node = TRUE, null_src = FALSE) {
   param_tib <- get_param_defaults(operator)
-  op <- snap_operator_helper(operator, check_operator = FALSE, node = node)
+  op <- snap_operator_help(operator, check_operator = FALSE, node = node)
 
   xml_graph <- op@xml_graph
   params <- param_tib$param
@@ -15,7 +15,7 @@ build_xml_engine <- function(operator, node = TRUE, null_src = FALSE) {
   defaults[is.na(defaults)] <- "NULL"
   descriptions <- param_tib$description
 
-  op_name <- clean_param_names(op@operator)
+  op_name <- clean_param_names(op@operator, prefix = "op_")
 
   func_file <- file.path("R", glue("{op_name}.R"))
 
@@ -34,17 +34,6 @@ build_xml_engine <- function(operator, node = TRUE, null_src = FALSE) {
     "xml_add_child(sourceProduct, 'source', id = 'null')"
   }
 
-  operator_sources <- c("reader")
-  op_src_id <- sub("\\.0", "", paste0(".", seq_along(operator_sources) - 1))
-
-  purrr::map2_chr(
-    op_src_id,
-    operator_sources,
-    function(.x, .y) {
-      glue("xml_add_child(sourceProduct{.x}, refid = {.y})\n")
-    }
-  )
-
   writeLines(
     c(
       glue(
@@ -62,9 +51,8 @@ build_xml_engine <- function(operator, node = TRUE, null_src = FALSE) {
         }
       ),
       "#' @details",
-      chr_80_split(glue(
-        "#' Descrscription from `gpt {operator}` -h`: {op@description} "
-      )),
+      "#' Descrscription from '`gpt {operator} -h`':\n#'",
+      chr_80_split(glue("#' \"{op@description}\" ")),
       "#' @import xml2",
       "#' @return xml2 xml graph",
       "#' @export",
@@ -96,7 +84,15 @@ build_xml_engine <- function(operator, node = TRUE, null_src = FALSE) {
           }
         ), collapse = "\n  "),
         "\n  ",
-        "return(op_xml)\n",
+        "snap_{op_name} <- S7::new_class(
+          'snap_{op_name}',
+          parent=snap_operator)\n  ",
+        "snap_{op_name}(
+          operator = '{op@operator}',
+          operator_id = operator_id,
+          operator_sources = operator_sources,
+          created_by = rlang::current_fn(),
+          xml_graph = as.character(op_xml))\n ",
         "}}"
       )
     ),

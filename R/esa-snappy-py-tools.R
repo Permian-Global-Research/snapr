@@ -56,7 +56,7 @@ get_param_defaults <- function(
   }) |>
     dplyr::bind_rows()
 
-  gpt_params <- snap_operator_helper(
+  gpt_params <- snap_operator_help(
     operator,
     check_operator = FALSE
   )@parameters

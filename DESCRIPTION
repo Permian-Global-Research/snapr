@@ -11,10 +11,16 @@ Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.1
 Imports: 
+    cli,
     dplyr,
+    glue,
+    purrr,
+    rlang,
     S7,
     stringr,
     tibble,
     xml2
 Suggests: 
-    reticulate
+    reticulate,
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3

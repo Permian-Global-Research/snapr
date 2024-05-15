@@ -4,7 +4,7 @@
 \alias{build_xml_engine}
 \title{A function to write R functions for given xml graphs.
 This function creates a function that takes the arguments and xml from
-a snap_operator_helper_bject to create a function that can then be used to
+a snap_operator_help_bject to create a function that can then be used to
 build gpt graphs.}
 \usage{
 build_xml_engine(operator, node = TRUE, null_src = FALSE)
@@ -12,7 +12,7 @@ build_xml_engine(operator, node = TRUE, null_src = FALSE)
 \description{
 A function to write R functions for given xml graphs.
 This function creates a function that takes the arguments and xml from
-a snap_operator_helper_bject to create a function that can then be used to
+a snap_operator_help_bject to create a function that can then be used to
 build gpt graphs.
 }
 \keyword{internal}
