@@ -10,8 +10,11 @@ get_operators(gpt_path = "/home/hugh/esa-snap/bin/gpt")
 \item{gpt_path}{character path to the gpt executable}
 }
 \value{
-tibble of operators and descriptions
+tibble of operators,  descriptions and the associated R function.
 }
 \description{
 function to get the operators from the gpt executable
+}
+\details{
+Where the R function is not available the value is set to NA.
 }

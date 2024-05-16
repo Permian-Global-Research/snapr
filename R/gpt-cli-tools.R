@@ -24,7 +24,8 @@ join_multilines <- function(vec) {
 
 #' function to get the operators from the gpt executable
 #' @param gpt_path character path to the gpt executable
-#' @return tibble of operators and descriptions
+#' @return tibble of operators,  descriptions and the associated R function.
+#' @details Where the R function is not available the value is set to NA.
 #' @export
 get_operators <- function(gpt_path = "/home/hugh/esa-snap/bin/gpt") {
   gpt_help <- system2(gpt_path,
@@ -35,14 +36,22 @@ get_operators <- function(gpt_path = "/home/hugh/esa-snap/bin/gpt") {
   op_n <- which(gpt_help == "Operators:")
   operators <- join_multilines(gpt_help[(op_n + 1):(length(gpt_help) - 1)])
 
+  snapr_obs <- ls("package:snapr")
+
   operators <- operators |>
     trimws() |>
     tibble::as_tibble() |>
     dplyr::mutate(
       operator = stringr::str_extract(value, "^[^\\s]+"),
-      description = stringr::str_squish(stringr::str_extract(value, "\\s.*$"))
+      description = stringr::str_squish(stringr::str_extract(value, "\\s.*$")),
+      clean_op = clean_param_names(operator, prefix = "op_"),
+      r_function = dplyr::case_when(
+        clean_op %in% snapr_obs ~ clean_op,
+        TRUE ~ NA_character_
+      )
     ) |>
-    dplyr::select(operator, description)
+    dplyr::select(operator, description, r_function)
+
 
   return(operators)
 }
