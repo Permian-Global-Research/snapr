@@ -27,9 +27,15 @@ xml_printer <- function(x) {
 #' @noRd
 clean_param_names <- function(x, prefix = "") {
   # convert x to snake case
-  s <- stringr::str_replace_all(x, " ", "") |>
-    stringr::str_replace_all("-", "_") |>
-    stringr::str_replace_all("([a-z])([A-Z])", "\\1_\\2") |>
+  s <- stringr::str_replace_all(
+    x,
+    c(
+      " " = "",
+      "-" = "_",
+      "\\." = "_",
+      "([a-z])([A-Z])" = "\\1_\\2"
+    )
+  ) |>
     stringr::str_to_lower()
 
   return(glue("{prefix}{s}"))
