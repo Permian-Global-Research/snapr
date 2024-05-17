@@ -180,8 +180,8 @@ write_op_test <- function(op_name, gpt_op, null_src, node) {
       'gpt_op <- snap_operator_help("{gpt_op@operator}",
       check_operator = FALSE,
       node = {node})\n',
-      'snapr_xml_nodes <- all_nodes(as_xml_document(r_op), "sourceProduct")\n ',
-      'gpt_example_nodes <- all_nodes(as_xml_document(gpt_op), "source")\n',
+      "snapr_xml_nodes <- all_nodes(as_xml_document(r_op))\n ",
+      "gpt_example_nodes <- all_nodes(as_xml_document(gpt_op))\n",
       "testthat::expect_equal(snapr_xml_nodes, gpt_example_nodes)",
       "}})"
     ),
