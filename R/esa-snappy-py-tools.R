@@ -66,11 +66,13 @@ get_param_defaults <- function(
     check_operator = FALSE
   )@parameters
 
+  # browser()
+
   if (nrow(op_val_df) == 0) {
     return(NULL)
   } else {
     df <- suppressWarnings(
-      dplyr::left_join(op_val_df, gpt_params, by = "param") |>
+      dplyr::right_join(op_val_df, gpt_params, by = "param") |>
         dplyr::mutate(
           description = dplyr::case_when(
             is.na(description.y) ~ description.x,
