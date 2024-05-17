@@ -133,14 +133,60 @@ get_operator_help <- function(
     )
   }
 
+  src_opts_n <- which(gpt_help == "Source Options:")
   param_n <- which(gpt_help == "Parameter Options:")
   graph_xml_n <- which(gpt_help == "Graph XML Format:")
   desc_n <- which(gpt_help == "Description:")
 
+
+
+  if (length(src_opts_n) == 1) {
+    src_opts <- join_multilines(gpt_help[(src_opts_n + 1):(param_n - 1)])
+
+
+    default_src_opts <- tibble::tibble(
+      sources = "sourceProduct",
+      class = "string",
+      description = "The source product as input to the operator"
+    )
+
+    src_opts_tib <- src_opts |>
+      tibble::as_tibble() |>
+      dplyr::mutate(
+        sources = stringr::str_extract(value, "(?<=-S)[^\\s]*"),
+        class = stringr::str_extract(sources, "(?<=<)[^>]*"),
+        sources = stringr::str_extract(sources, "^[^=]*"),
+        description = stringr::str_squish(
+          stringr::str_extract(value, "(?<=\\>\\s).*")
+        )
+      ) |>
+      dplyr::select(sources, class, description)
+
+    if (!"sourceProduct" %in% src_opts_tib$sources) {
+      src_opts_tib <- dplyr::bind_rows(src_opts_tib, default_src_opts)
+    }
+
+    src_opts_tib <- src_opts_tib |>
+      dplyr::filter(
+        !sources %in% c("source", "sources", "sourceProducts", "Source")
+      )
+
+    browser()
+  } else if (length(src_opts_n) == 0) {
+    src_opts_tib <- tibble::tibble(sources = NA, class = NA, description = NA)
+  } else {
+    cli::cli_abort(
+      c(
+        "x" = "Multiple 'Source Options' lines found in: `gpt {operator} -h output`"
+      )
+    )
+  }
+
+
   if (length(param_n) == 1) {
     params <- join_multilines(gpt_help[(param_n + 1):(graph_xml_n - 1)])
 
-    param_descr <- gpt_help[(desc_n + 1):(param_n - 1)] |>
+    param_descr <- gpt_help[(desc_n + 1):(src_opts_n - 1)] |>
       paste(collapse = "\n") |>
       stringr::str_squish()
 
