@@ -2,6 +2,8 @@
 set -e
 
 # This script builds the ESA SNAP Python API and runs the tests
+# In theory this shouldn't be required but it seems that config, at least on
+# my machine, is not working correctly. This script is a workaround for that.
 
 # Set the paths to:
 # ESA SNAP Python API

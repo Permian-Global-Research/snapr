@@ -47,6 +47,11 @@ get_param_defaults <- function(
     list(param = name, default = default, description = description)
   })
 
+  op_vals <- lapply(op_vals, function(x) {
+    x$param <- fix_param_mismatches(x$param)
+    x
+  })
+
   op_val_df <- lapply(op_vals, \(x) {
     param_vals <- lapply(x, \(y) {
       if (is.null(y)) "NULL" else y
@@ -61,22 +66,37 @@ get_param_defaults <- function(
     check_operator = FALSE
   )@parameters
 
-  df <- suppressWarnings(
-    dplyr::left_join(op_val_df, gpt_params, by = "param") |>
-      dplyr::mutate(
-        description = dplyr::case_when(
-          is.na(description.y) ~ description.x,
-          TRUE ~ description.y
+  if (nrow(op_val_df) == 0) {
+    return(NULL)
+  } else {
+    df <- suppressWarnings(
+      dplyr::left_join(op_val_df, gpt_params, by = "param") |>
+        dplyr::mutate(
+          description = dplyr::case_when(
+            is.na(description.y) ~ description.x,
+            TRUE ~ description.y
+          ) |>
+            stringr::str_squish(),
+          default = dplyr::case_when(
+            class == "boolean" ~ toupper(default),
+            is.na(as.numeric(default)) & default != "NULL" ~
+              paste0('"', default, '"'),
+            TRUE ~ default
+          )
         ) |>
-          stringr::str_squish(),
-        default = dplyr::case_when(
-          class == "boolean" ~ toupper(default),
-          is.na(as.numeric(default)) & default != "NULL" ~
-            paste0('"', default, '"'),
-          TRUE ~ default
-        )
-      ) |>
-      dplyr::select(param, default, class, description)
+        dplyr::select(param, default, class, description)
+    )
+    return(df)
+  }
+}
+
+#' Fix parameter mismatches between the python and gpt params.
+#' @param x character parameter name
+#' @keywords internal
+#' @noRd
+fix_param_mismatches <- function(x) {
+  switch(x,
+    "sourceBandNames" = "sourceBands",
+    x
   )
-  return(df)
 }

@@ -7,6 +7,20 @@ pheader <- function(x) {
   cli::style_underline(cli::col_yellow(x))
 }
 
+#' Print the xml graph for a snap_operator or snap_operator_help object
+#' @param x snap_operator or snap_operator_help object
+#' @keywords internal
+#' @noRd
+xml_printer <- function(x) {
+  cli::style_bold("XML process graph: \n\n") |>
+    cli::col_yellow() |>
+    cat()
+  as.character(paste0(x@xml_graph, "\n")) |>
+    cli::style_italic() |>
+    cli::col_green() |>
+    cat()
+}
+
 #' clean up ugly snap operator names
 #' @param x character vector
 #' @keywords internal

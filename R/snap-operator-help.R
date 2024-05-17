@@ -1,4 +1,4 @@
-#' function for creating a new snap operator helper object
+#' function for creating a new snap_operator_help object
 #' @param operator character name of the operator
 #' @param gpt_path character path to the gpt executable
 #' @param check_operator logical check if the operator is valid
@@ -8,7 +8,7 @@
 #' @import S7
 #' @export
 #'
-snap_operator_help <- S7::new_class("snap_operator_help",
+snap_operator_help <- new_class("snap_operator_help",
   properties = list(
     operator = class_character,
     description = class_character,
@@ -83,27 +83,22 @@ method(print, snap_operator_help) <- function(x, xml = FALSE) {
   invisible()
 }
 
-
-
-
-#' show xml graph method for snap operator helper object
+#' create xml_document object from snap_operator_help
+#' @name snap_operator_help
 #' @param x snap_operator_help object
-#' @name snap_operator_help
 #' @export
-show_xml <- new_generic("show_xml", "x")
-#' @name snap_operator_help
-#' @export
-method(show_xml, snap_operator_help) <- function(x) {
-  cli::style_bold("XML process graph: \n\n") |>
-    cli::col_yellow() |>
-    cat()
-  as.character(paste0(x@xml_graph, "\n")) |>
-    cli::style_italic() |>
-    cli::col_green() |>
-    cat()
-  invisible()
+method(as_xml_document, snap_operator_help) <- function(x) {
+  xml2::read_xml(x@xml_graph)
 }
 
+#' show xml graph method for snap_operator_help object
+#' @name snap_operator_help
+#' @param x snap_operator_help object
+#' @export
+method(show_xml, snap_operator_help) <- function(x) {
+  xml_printer(x)
+  invisible()
+}
 
 
 
