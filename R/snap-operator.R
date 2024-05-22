@@ -11,7 +11,7 @@ snap_operator <- new_class(
   properties = list(
     operator = class_character,
     operator_id = class_character,
-    operator_sources = class_character,
+    operator_sources = class_list,
     created_with = class_function,
     xml_graph = class_character
   ),
@@ -21,6 +21,9 @@ snap_operator <- new_class(
     }
     if (length(self@operator_id) != 1) {
       return("@operator must be a character of length 1")
+    }
+    if (length(self@operator_sources) < 1) {
+      return("@operator_sources must be a list of length 1 or greater")
     }
     if (!check_xml_read(self@xml_graph)) {
       return("@xml_graph must contain valid XML content")
