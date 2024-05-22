@@ -4,7 +4,7 @@
 #' build gpt graphs.
 #' @param operator character name of the operator
 #' @param node logical indicating if the operator is a node
-#' @import glue
+#' @import glue xml2
 #' @keywords internal
 #' @export
 build_xml_engine <- function(operator, node = TRUE) {
