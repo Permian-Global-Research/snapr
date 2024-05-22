@@ -12,6 +12,7 @@ snap_operator_help <- new_class("snap_operator_help",
   properties = list(
     operator = class_character,
     description = class_character,
+    sources = class_data.frame,
     parameters = class_data.frame,
     xml_graph = class_character
   ),
@@ -22,6 +23,9 @@ snap_operator_help <- new_class("snap_operator_help",
     }
     if (length(self@description) != 1) {
       return("@description must be a character of length 1")
+    }
+    if (ncol(self@sources) != 3) {
+      return("@sources must be a data.frame with 3 columns")
     }
     if (ncol(self@parameters) != 3) {
       return("@parameters must be a data.frame with 3 columns")
@@ -47,8 +51,9 @@ snap_operator_help <- new_class("snap_operator_help",
       S7_object(),
       operator = op_help[[1]],
       description = op_help[[2]],
-      parameters = op_help[[3]],
-      xml_graph = as.character(op_help[[4]])
+      sources = op_help[[3]],
+      parameters = op_help[[4]],
+      xml_graph = as.character(op_help[[5]])
     )
   }
 )
@@ -72,6 +77,9 @@ method(print, snap_operator_help) <- function(x, xml = FALSE) {
       cli::style_italic(paste0(x@description, "\n\n"))
     )
   ))
+
+  cat(pheader("Sources:\n\n"))
+  print(x@sources, n = nrow(x@sources))
 
   cat(pheader("Parameters:\n\n"))
   print(x@parameters, n = nrow(x@parameters))
@@ -123,6 +131,7 @@ get_operator_help <- function(
     args = c("-h", operator, "2>/dev/null"),
     stdout = TRUE, stderr = FALSE
   ))
+
   if (length(gpt_help) == 0) {
     cli::cli_abort(
       c(
@@ -138,40 +147,79 @@ get_operator_help <- function(
   graph_xml_n <- which(gpt_help == "Graph XML Format:")
   desc_n <- which(gpt_help == "Description:")
 
+  xml_graph <- gpt_help[(graph_xml_n + 1):(length(gpt_help))] |>
+    paste(collapse = "\n") |>
+    xml2::read_xml()
+
+  if (isTRUE(node)) {
+    xml_graph <- xml2::xml_find_all(xml_graph, "//node")
+  }
 
 
-  if (length(src_opts_n) == 1) {
-    src_opts <- join_multilines(gpt_help[(src_opts_n + 1):(param_n - 1)])
+  gpt_xml_src_names <- xml_graph |>
+    xml2::xml_find_all("//sources") |>
+    xml_children() |>
+    purrr::map_chr(xml2::xml_name)
+
+  if (length(src_opts_n) == 1 || length(gpt_xml_src_names) > 0) {
+    poss_srcs <- c(
+      "source", "sources", "Source",
+      "sourceProduct", "sourceProducts"
+    )
 
 
     default_src_opts <- tibble::tibble(
       sources = "sourceProduct",
-      class = "string",
-      description = "The source product as input to the operator"
+      class = "string/file",
+      description = "The source product(s) as input to the operator"
     )
 
-    src_opts_tib <- src_opts |>
-      tibble::as_tibble() |>
-      dplyr::mutate(
-        sources = stringr::str_extract(value, "(?<=-S)[^\\s]*"),
-        class = stringr::str_extract(sources, "(?<=<)[^>]*"),
-        sources = stringr::str_extract(sources, "^[^=]*"),
-        description = stringr::str_squish(
-          stringr::str_extract(value, "(?<=\\>\\s).*")
-        )
-      ) |>
-      dplyr::select(sources, class, description)
+    if (length(src_opts_n) == 1) {
+      src_end <- ifelse(length(param_n) == 0, graph_xml_n, param_n)
+      src_opts <- join_multilines(gpt_help[(src_opts_n + 1):(src_end - 1)])
 
-    if (!"sourceProduct" %in% src_opts_tib$sources) {
+      src_opts_tib <- src_opts |>
+        tibble::as_tibble() |>
+        dplyr::mutate(
+          sources = stringr::str_extract(value, "(?<=-S)[^\\s]*"),
+          class = stringr::str_extract(sources, "(?<=<)[^>]*"),
+          sources = stringr::str_extract(sources, "^[^=]*"),
+          description = stringr::str_squish(
+            stringr::str_extract(value, "(?<=\\>\\s).*")
+          )
+        ) |>
+        dplyr::select(sources, class, description) |>
+        dplyr::mutate(
+          sources =
+            dplyr::case_when(
+              sources %in% poss_srcs
+              ~ "sourceProduct",
+              TRUE ~ sources
+            ),
+          description = dplyr::case_when(
+            sources == "sourceProduct" ~ "The source product(s) as input to the operator",
+            TRUE ~ description
+          ),
+          class = dplyr::case_when(
+            sources == "sourceProduct" ~ "string/file",
+            TRUE ~ class
+          )
+        ) |>
+        dplyr::distinct(sources, .keep_all = TRUE)
+    } else {
+      src_opts_tib <- tibble::tibble(sources = NA, class = NA, description = NA)
+    }
+
+    if (any(poss_srcs %in% gpt_xml_src_names) &&
+      !any(poss_srcs %in% src_opts_tib$sources)) {
       src_opts_tib <- dplyr::bind_rows(src_opts_tib, default_src_opts)
     }
 
-    src_opts_tib <- src_opts_tib |>
-      dplyr::filter(
-        !sources %in% c("source", "sources", "sourceProducts", "Source")
-      )
-
-    browser()
+    if ("sourceProduct" %in% src_opts_tib$sources) {
+      src_opts_tib <- src_opts_tib |>
+        dplyr::arrange(dplyr::desc(sources == "sourceProduct")) |>
+        na.omit()
+    }
   } else if (length(src_opts_n) == 0) {
     src_opts_tib <- tibble::tibble(sources = NA, class = NA, description = NA)
   } else {
@@ -186,7 +234,8 @@ get_operator_help <- function(
   if (length(param_n) == 1) {
     params <- join_multilines(gpt_help[(param_n + 1):(graph_xml_n - 1)])
 
-    param_descr <- gpt_help[(desc_n + 1):(src_opts_n - 1)] |>
+    param_end <- if (length(src_opts_n) == 0) graph_xml_n else src_opts_n
+    param_descr <- gpt_help[(desc_n + 1):(param_end - 1)] |>
       paste(collapse = "\n") |>
       stringr::str_squish()
 
@@ -212,13 +261,7 @@ get_operator_help <- function(
     )
   }
 
-  xml_graph <- gpt_help[(graph_xml_n + 1):(length(gpt_help))] |>
-    paste(collapse = "\n") |>
-    xml2::read_xml()
 
-  if (isTRUE(node)) {
-    xml_graph <- xml2::xml_find_all(xml_graph, "//node")
-  }
 
-  list(operator, param_descr, paramstib, xml_graph)
+  list(operator, param_descr, src_opts_tib, paramstib, xml_graph)
 }
