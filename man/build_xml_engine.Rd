@@ -7,7 +7,12 @@ This function creates a function that takes the arguments and xml from
 a snap_operator_help_bject to create a function that can then be used to
 build gpt graphs.}
 \usage{
-build_xml_engine(operator, node = TRUE, null_src = FALSE)
+build_xml_engine(operator, node = TRUE)
+}
+\arguments{
+\item{operator}{character name of the operator}
+
+\item{node}{logical indicating if the operator is a node}
 }
 \description{
 A function to write R functions for given xml graphs.
