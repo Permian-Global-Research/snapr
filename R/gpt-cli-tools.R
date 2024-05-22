@@ -30,7 +30,8 @@ join_multilines <- function(vec) {
 get_operators <- function(gpt_path = "/home/hugh/esa-snap/bin/gpt") {
   gpt_help <- system2(gpt_path,
     args = c("-h", "2>/dev/null"),
-    stdout = TRUE, stderr = FALSE
+    stdout = TRUE, stderr = FALSE,
+    timeout = 10
   )
 
   op_n <- which(gpt_help == "Operators:")
