@@ -57,16 +57,6 @@ build_xml_engine <- function(operator, node = TRUE) {
   invisible()
 }
 
-#' helper to split long strings at 80 characters
-#' @param x character string
-#' @param collapse character string to join lines
-#' @return character string
-#' @keywords internal
-#' @noRd
-chr_80_split <- function(x, collapse = "\n#' ") {
-  lines <- strwrap(x, width = 80)
-  paste(lines, collapse = collapse)
-}
 
 #' function to write R functions to file for given xml graphs
 #' @import glue
@@ -86,9 +76,9 @@ write_op_file <- function(
       op_param_docs,
       "#' @details",
       "#' Descrscription from '`gpt {operator} -h`':\n#'",
-      chr_80_split(glue("#' \"{op@description}\" ")),
+      clean_docs(chr_80_split(glue("#' \"{op@description}\" "))),
       "#' @import xml2",
-      "#' @return xml2 xml graph",
+      glue("#' @return snap_{op_name} object"),
       "#' @export",
       glue(
         "{op_name} <- function(\n{param_string}) {{\n  ",
@@ -139,8 +129,8 @@ write_op_test <- function(op_name, gpt_op, null_src, node) {
       'gpt_op <- snap_operator_help("{gpt_op@operator}",
       check_operator = FALSE,
       node = {node})\n',
-      "snapr_xml_nodes <- all_nodes(as_xml_document(r_op))\n ",
-      "gpt_example_nodes <- all_nodes(as_xml_document(gpt_op))\n",
+      "snapr_xml_nodes <- all_nodes(as_xml(r_op))\n ",
+      "gpt_example_nodes <- all_nodes(as_xml(gpt_op))\n",
       "testthat::expect_equal(snapr_xml_nodes, gpt_example_nodes)",
       "}})"
     ),
@@ -240,7 +230,8 @@ build_source_docs <- function(input_srcs, input_descrip, null_src) {
     purrr::map2_chr(
       input_srcs, input_descrip,
       \(.x, .y) {
-        chr_80_split(glue("#' @param {.x} {.y}\n"))
+        chr_80_split(glue("#' @param {.x} {.y}\n")) |>
+          clean_docs()
       }
     )
   }
@@ -255,7 +246,8 @@ build_param_docs <- function(params, descriptions) {
   purrr::map2_chr(
     params, descriptions,
     \(.x, .y) {
-      chr_80_split(glue("#' @param {.x} {.y}\n"))
+      chr_80_split(glue("#' @param {.x} {.y}\n")) |>
+        clean_docs()
     }
   )
 }

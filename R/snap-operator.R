@@ -15,6 +15,7 @@ snap_operator <- new_class(
     created_with = class_function,
     xml_graph = class_character
   ),
+  package = "snapr",
   validator = function(self) {
     if (length(self@operator) != 1) {
       return("@operator must be a character of length 1")
@@ -42,6 +43,7 @@ snap_operator <- new_class(
 #' @export
 snap_read_operator <- new_class(
   "snap_read_operator",
+  package = "snapr",
   properties = list(
     operator = class_character,
     operator_id = class_character,
@@ -62,17 +64,17 @@ snap_read_operator <- new_class(
 )
 
 #' create xml_document object from snap_operator
-#' @name as_xml_document
+#' @name as_xml
 #' @param x snap_operator object
-method(as_xml_document, snap_operator) <- function(x) {
+method(as_xml, snap_operator) <- function(x) {
   xml2::read_xml(x@xml_graph)
 }
 
 #' create xml_document object from snap_read_operator
-#' @name as_xml_document
+#' @name as_xml
 #' @param x snap_read_operator object
 #' @export
-method(as_xml_document, snap_read_operator) <- function(x) {
+method(as_xml, snap_read_operator) <- function(x) {
   xml2::read_xml(x@xml_graph)
 }
 

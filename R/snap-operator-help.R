@@ -5,6 +5,7 @@
 #' @param node logical return the node or the full xml graph
 #' @return snap_operator_help S7 object with the following slots:
 #' operator, description, parameters, and xml_graph
+#' @name snap_operator_help
 #' @import S7
 #' @export
 #'
@@ -61,8 +62,11 @@ snap_operator_help <- new_class("snap_operator_help",
 #' print method for snap operator helper object
 #' @param x snap_operator_help object
 #' @param xml logical print the xml graph
-#' @name print.snap_operator_help
-method(print, snap_operator_help) <- function(x, xml = FALSE) {
+#' @param ... not used.
+#' @name snap_operator_help
+#' @export
+#' @noRd
+method(print, snap_operator_help) <- function(x, xml = FALSE, ...) {
   cat("<snap_operator_help>\n")
   cat("\n")
   cat(paste(
@@ -92,15 +96,15 @@ method(print, snap_operator_help) <- function(x, xml = FALSE) {
 }
 
 #' create xml_document object from snap_operator_help
-#' @name snap_operator_help
+#' @name as_xml
 #' @param x snap_operator_help object
 #' @export
-method(as_xml_document, snap_operator_help) <- function(x) {
+method(as_xml, snap_operator_help) <- function(x) {
   xml2::read_xml(x@xml_graph)
 }
 
 #' show xml graph method for snap_operator_help object
-#' @name snap_operator_help
+#' @name show_xml
 #' @param x snap_operator_help object
 #' @export
 method(show_xml, snap_operator_help) <- function(x) {
@@ -249,7 +253,9 @@ get_operator_help <- function(
           stringr::str_extract(value, "(?<=\\>\\s).*")
         )
       ) |>
-      dplyr::select(param, class, description)
+      dplyr::select(param, class, description) |>
+      # for some reason this borks the reader unless removed.
+      dplyr::filter(param != "useAdvancedOptions")
   } else if (length(param_n) == 0) {
     paramstib <- tibble::tibble(param = NA, class = NA, description = NA)
     param_descr <- gpt_help[(desc_n + 1):(graph_xml_n - 1)] |>

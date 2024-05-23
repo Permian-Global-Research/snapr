@@ -1,3 +1,8 @@
 ^snapr\.Rproj$
 ^\.Rproj\.user$
 ^README\.Rmd$
+^DEV
+^tools
+^\.lintr$
+^\.vscode$
+^LICENSE\.md$

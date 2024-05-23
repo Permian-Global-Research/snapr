@@ -59,3 +59,28 @@ check_xml_read <- function(x) {
     return(TRUE)
   }
 }
+
+#' helper to split long strings at 80 characters
+#' @param x character string
+#' @param collapse character string to join lines
+#' @return character string
+#' @keywords internal
+#' @noRd
+chr_80_split <- function(x, collapse = "\n#' ") {
+  lines <- strwrap(x, width = 80)
+  paste(lines, collapse = collapse)
+}
+
+#' function to clean up documentation strings
+#' @param x character string
+#' @return character string
+#' @keywords internal
+#' @noRd
+clean_docs <- function(x) {
+  x <- gsub("(?<!')#(?!')", "", x, perl = TRUE) # Drop isolated "#"
+  x <- gsub("\\{", "\\\\{", x) # Append "\" to "{"
+  x <- gsub("\\}", "\\\\}", x) # Append "\" to "}"
+  x <- gsub("\\]", "\\\\]", x) # Append "\" to "]"
+  x <- gsub("\\[", "\\\\[", x) # Append "\" to "["
+  return(x)
+}

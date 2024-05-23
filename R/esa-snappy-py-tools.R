@@ -80,6 +80,7 @@ get_param_defaults <- function(
           ) |>
             stringr::str_squish(),
           default = dplyr::case_when(
+            class == "boolean" & default == "off" ~ "FALSE",
             class == "boolean" ~ toupper(default),
             is.na(as.numeric(default)) & default != "NULL" ~
               paste0('"', default, '"'),

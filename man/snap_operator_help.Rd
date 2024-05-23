@@ -19,8 +19,6 @@ snap_operator_help(
 \item{check_operator}{logical check if the operator is valid}
 
 \item{node}{logical return the node or the full xml graph}
-
-\item{x}{snap_operator_help object}
 }
 \value{
 snap_operator_help S7 object with the following slots:
@@ -28,8 +26,4 @@ operator, description, parameters, and xml_graph
 }
 \description{
 function for creating a new snap_operator_help object
-
-create xml_document object from snap_operator_help
-
-show xml graph method for snap_operator_help object
 }
