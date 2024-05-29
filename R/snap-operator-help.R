@@ -39,7 +39,7 @@ snap_operator_help <- new_class("snap_operator_help",
     }
   },
   constructor = function(operator,
-                         gpt_path = "/home/hugh/esa-snap/bin/gpt",
+                         gpt_path = getOption("snapr_gpt"),
                          check_operator = TRUE,
                          node = TRUE) {
     op_help <- get_operator_help(
@@ -124,7 +124,7 @@ method(show_xml, snap_operator_help) <- function(x) {
 #' @noRd
 get_operator_help <- function(
     operator,
-    gpt_path = "/home/hugh/esa-snap/bin/gpt",
+    gpt_path = getOption("snapr_gpt"),
     check_operator = TRUE,
     node = TRUE) {
   if (check_operator) {
