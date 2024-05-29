@@ -65,7 +65,7 @@ method(run_graph, snap_graph) <- function(
     gpt_path = getOption("snapr_gpt")) {
   txml <- tempfile(fileext = ".xml")
   save_graph(x, txml)
-  system(paste(gpt_path, txml, "-x"))
+  system(paste(gpt_path, txml))
 }
 
 
