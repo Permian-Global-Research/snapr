@@ -8,16 +8,9 @@
 #' @export
 get_param_defaults <- function(
     operator,
-    py_env = "~/virtualenvs/snap/bin/python") {
+    py_env = find_snappy_install()) {
   operator <- rlang::arg_match(operator, get_operators()$operator)
-  if (!requireNamespace("reticulate", quietly = TRUE)) {
-    cli::cli_abort(
-      paste(
-        "The `reticulate` package is required for the",
-        "`get_param_defaults` function"
-      )
-    )
-  }
+  check_reticulte()
   reticulate::use_python(py_env, required = TRUE)
 
   esa_snappy <- suppressMessages(reticulate::import("esa_snappy"))
@@ -66,8 +59,6 @@ get_param_defaults <- function(
     check_operator = FALSE
   )@parameters
 
-  # browser()
-
   if (nrow(op_val_df) == 0) {
     return(NULL)
   } else {
@@ -102,4 +93,118 @@ fix_param_mismatches <- function(x) {
     "sourceBandNames" = "sourceBands",
     x
   )
+}
+
+#' Configure the snappy python environment
+#' congfigures the python library "esa_snappy"
+configure_snappy_python <- function() {
+  check_reticulte()
+  snapbin <- getOption("snapr_bin")
+  snappy_conf <- file.path(snapbin, "snappy-conf")
+  snappy_env_exists <- reticulate::virtualenv_exists(envname = "snapr_snappy")
+
+  if (isFALSE(snappy_env_exists)) {
+    reticulate::virtualenv_create("snapr_snappy",
+      packages = c("numpy", "pytest")
+    )
+  }
+
+  venv_loc <- file.path(
+    reticulate::virtualenv_root(),
+    "snapr_snappy"
+  )
+
+  pyex <- file.path(
+    venv_loc, "bin", "python"
+  )
+
+
+  reticulate::use_virtualenv("snapr_snappy", required = TRUE)
+
+  if (!suppressMessages(reticulate::py_module_available("esa_snappy"))) {
+    pkgdest <- file.path(venv_loc, "lib", "python*", "site-packages")
+    system2(snappy_conf, args = c(pyex, pkgdest))
+  }
+
+  options(snappy_python = pyex)
+
+  invisible()
+}
+
+destroy_snappy_env <- function(ask = interactive()) {
+  check_reticulte()
+  py_cleanup <- function() {
+    reticulate::virtualenv_remove("snapr_snappy", confirm = FALSE)
+    options(snappy_python = NULL)
+  }
+
+
+  if (isFALSE(ask)) {
+    py_cleanup()
+    return(invisible())
+  }
+
+  cli::cli_inform(
+    c(
+      "!" = "This will remove the 'snapr_snappy' virtual python environment.",
+      "i" = "Are you sure you want to proceed?"
+    )
+  )
+
+  choice <- menu(c(
+    cli::col_green("Yes"),
+    cli::col_red("No")
+  ))
+
+  switch(choice,
+    py_cleanup(),
+    invisible()
+  )
+}
+
+find_snappy_install <- function() {
+  if (length(getOption("snappy_python")) > 0) {
+    return(getOption("snappy_python"))
+  }
+
+  check_reticulte()
+
+  snappy_env_exists <- reticulate::virtualenv_exists(envname = "snapr_snappy")
+  snappy_module_exists <- FALSE
+  if (isTRUE(snappy_env_exists)) {
+    reticulate::activate_virtualenv("snapr_snappy")
+    snappy_module_exists <- suppressMessages(
+      reticulate::py_module_available("esa_snappy")
+    )
+  }
+
+  snappy_ex <- file.path(
+    reticulate::virtualenv_root(),
+    "snapr_snappy", "bin", "python"
+  )
+
+  if (isTRUE(snappy_module_exists)) {
+    options(snappy_python = snappy_ex)
+    return(snappy_ex)
+  } else {
+    cli::cli_abort(
+      c(
+        "x" = "The snappy python environment is not available.",
+        "i" = "Please run `configure_snappy_python()` to create the environment."
+      )
+    )
+  }
+}
+
+check_reticulte <- function() {
+  if (!requireNamespace("reticulate", quietly = TRUE)) {
+    cli::cli_abort(
+      paste(
+        "The `reticulate` package is required to set use snappy from",
+        "{{snapr}}.",
+        "However, this is not essential and is required for some developmental",
+        "functionality"
+      )
+    )
+  }
 }
