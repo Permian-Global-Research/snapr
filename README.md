@@ -9,9 +9,14 @@
 
 [![Lifecycle:
 experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
-<!-- badges: end -->
-
-The goal of snapr is to …
+<!-- badges: end --> snapr is a proof of concept R package to interact
+with [The ESA Sentinel Applications Platform
+(SNAP)](https://step.esa.int/main/toolboxes/snap/) from R. SNAP provides
+an impressive set of tools for processing satellite data, many of which
+are not available in the wider R ecosystem. snapr is a wrapper for
+SNAP’s Graph Processing Tool (command line interface) and shares
+similar ambitions to the
+[SNAPISTA](https://github.com/snap-contrib/snapista) python library.
 
 ## Installation
 
