@@ -97,9 +97,17 @@ fix_param_mismatches <- function(x) {
 
 #' Configure the snappy python environment
 #' congfigures the python library "esa_snappy"
+#' @keywords internal
+#' @export
+#' @details This function creates a virtual python environment with the
+#' required packages for the "esa_snappy" library. The function also sets the
+#' "snappy_python" option to the python executable in the virtual environment.
 configure_snappy_python <- function() {
   check_reticulte()
   snapbin <- getOption("snapr_bin")
+  if (is.null(snapbin)) {
+    no_snap_inform()
+  }
   snappy_conf <- file.path(snapbin, "snappy-conf")
   snappy_env_exists <- reticulate::virtualenv_exists(envname = "snapr_snappy")
 
@@ -131,6 +139,10 @@ configure_snappy_python <- function() {
   invisible()
 }
 
+#' Destroy the snappy python environment
+#' @param ask logical if TRUE, will ask for confirmation
+#' @keywords internal
+#' @export
 destroy_snappy_env <- function(ask = interactive()) {
   check_reticulte()
   py_cleanup <- function() {
@@ -162,12 +174,15 @@ destroy_snappy_env <- function(ask = interactive()) {
   )
 }
 
+#' Find the snappy python executable
+#' @keywords internal
+#' @export
 find_snappy_install <- function() {
-  if (length(getOption("snappy_python")) > 0) {
+  check_reticulte()
+
+  if (!is.null(getOption("snappy_python"))) {
     return(getOption("snappy_python"))
   }
-
-  check_reticulte()
 
   snappy_env_exists <- reticulate::virtualenv_exists(envname = "snapr_snappy")
   snappy_module_exists <- FALSE
@@ -196,6 +211,9 @@ find_snappy_install <- function() {
   }
 }
 
+#' Check if the reticulate package is available
+#' @keywords internal
+#' @noRd
 check_reticulte <- function() {
   if (!requireNamespace("reticulate", quietly = TRUE)) {
     cli::cli_abort(

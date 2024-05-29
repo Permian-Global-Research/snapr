@@ -43,6 +43,11 @@ snap_graph <- new_class(
   }
 )
 
+method(show_xml, snap_graph) <- function(x) {
+  xml_printer(x)
+  invisible()
+}
+
 #' create xml_document object from snap_graph
 #' @name as_xml
 #' @param x snap_graph object
@@ -55,8 +60,15 @@ method(as_xml, snap_graph) <- function(x) {
 #' @param x snap_graph object
 #' @param gpt_path character path to gpt executable
 #' @export
-method(run_graph, snap_graph) <- function(x, gpt_path = "~/esa-snap/bin/gpt") {
+method(run_graph, snap_graph) <- function(
+    x,
+    gpt_path = getOption("snapr_gpt")) {
   txml <- tempfile(fileext = ".xml")
-  xml2::write_xml(as_xml(x), txml)
-  system(paste(gpt_path, txml))
+  save_graph(x, txml)
+  system(paste(gpt_path, txml, "-x"))
+}
+
+
+method(save_graph, snap_graph) <- function(x, file) {
+  xml2::write_xml(as_xml(x), file)
 }

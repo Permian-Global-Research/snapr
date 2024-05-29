@@ -6,7 +6,7 @@
 function calls the esa_snappy python library to get the default parameters
 for a SNAP operator}
 \usage{
-get_param_defaults(operator, py_env = "~/virtualenvs/snap/bin/python")
+get_param_defaults(operator, py_env = find_snappy_install())
 }
 \arguments{
 \item{operator}{character name of the SNAP operator}

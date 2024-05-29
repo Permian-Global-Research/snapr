@@ -17,3 +17,10 @@ show_xml <- new_generic("show_xml", "x")
 #' @param ... not used
 #' @export
 run_graph <- new_generic("run_graph", "x")
+
+
+#' write snap graph to file
+#' @param x snap_graph object
+#' @param ... not used
+#' @export
+save_graph <- new_generic("save_graph", "x")

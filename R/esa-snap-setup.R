@@ -1,3 +1,7 @@
+#' get the correct install file path for the snap installer
+#' @return character path to the snap installer
+#' @keywords internal
+#' @noRd
 get_os_installer <- function() {
   os <- Sys.info()[["sysname"]]
   version <- "10.0.0"
@@ -14,6 +18,13 @@ get_os_installer <- function() {
   )
 }
 
+#' download the snap installer
+#' @param url character url to the installer
+#' @param dest character path to the destination directory
+#' @param chmod logical change the file permissions to 755
+#' @return character path to the downloaded installer
+#' @keywords internal
+#' @noRd
 download_installer <- function(
     url,
     dest,
@@ -46,7 +57,13 @@ download_installer <- function(
   }
 }
 
-
+#' get the default snapr directory
+#' This is the directory where snap will be installed.
+#' @param child character child directory
+#' @param create logical create the directory if it does not exist
+#' @return character path to the snapr directory
+#' @keywords internal
+#' @noRd
 snapr_dir <- function(child = NULL, create = TRUE) {
   base_path <- tools::R_user_dir(package = "snapr", which = "data")
   if (!is.null(child)) {
@@ -62,6 +79,16 @@ snapr_dir <- function(child = NULL, create = TRUE) {
   return(p)
 }
 
+#' install snap
+#' download and install ESA SNAP.
+#' @param installer character path to the snap installer
+#' @param install_dir character path to the installation directory
+#' @details This function will download the installation file and install SNAP
+#' in an appropraite location. If you already have SNAP installed and dont't
+#' wish to install a second version (not sure if this is a real issue or not),
+#' you can set the SNAPR_BIN environment variable to the path of the SNAP bin
+#' directory.
+#' @export
 install_snap <- function(
     installer = download_installer(
       url = get_os_installer(),
@@ -80,6 +107,7 @@ install_snap <- function(
         install_dir
       )
     )
+    snapr_set_options()
   } else if (opsys == "Darwin") {
     cli::cli_abort(
       c(
@@ -95,7 +123,9 @@ install_snap <- function(
   }
 }
 
-
+#' abort if the operating system is not supported
+#' @keywords internal
+#' @noRd
 wrong_opsys_abort <- function() {
   cli::cli_abort(
     c(
@@ -105,10 +135,19 @@ wrong_opsys_abort <- function() {
   )
 }
 
+#' get the default snap bin directory
+#' @return character path to the snap bin directory
+#' @keywords internal
+#' @noRd
 default_snap_bin <- function() {
   file.path(snapr_dir("esa-snap", create = FALSE), "bin")
 }
 
+#' get the default snap gpt executable
+#' @param bin_dir character path to the snap bin directory
+#' @return character path to the snap gpt executable
+#' @keywords internal
+#' @noRd
 default_snap_gpt <- function(
     bin_dir = default_snap_bin()) {
   opsys <- Sys.info()[["sysname"]]
@@ -123,39 +162,55 @@ default_snap_gpt <- function(
   )
 }
 
+#' check if snap is installed
+#' @return logical TRUE if snap is installed
+#' @keywords internal
+#' @noRd
 check_snap_install <- function() {
-  if (length(getOption("snapr_bin") > 0 &&
-    file.exists(
-      file.path(default_snap_bin(), "gpt")
-    ))) {
+  if (any(
+    !is.null(
+      getOption("snapr_bin")
+    ),
+    file.exists(file.path(default_snap_bin(), "gpt"))
+  )) {
     return(TRUE)
   } else {
     return(FALSE)
   }
 }
 
+#' set snapr options
+#' @keywords internal
+#' @noRd
 snapr_set_options <- function() {
   if (Sys.getenv("SNAPR_BIN") == "") {
     if (isTRUE(check_snap_install())) {
       options(snapr_bin = default_snap_bin())
       options(snapr_gpt = default_snap_gpt())
     } else {
-      cli::cli_inform(
-        c(
-          "!" = "Snap gpt executable not found.",
-          "i" = "Here are your options:",
-          ">" = "1. Install snap with:",
-          " " = cli::code_highlight("snapr::install_snap()"),
-          ">" = "2. Manually install snap from
-            {.url https://step.esa.int/main/download/snap-download/}",
-          " " = "Set the SNAPR_BIN environment in your
-            .Renviron file using:",
-          " " = cli::code_highlight("usethis::edit_r_environ()")
-        )
-      )
+      no_snap_inform()
     }
   } else {
     options(snapr_bin = Sys.getenv("SNAPR_BIN"))
     options(snapr_gpt = default_snap_gpt(getOption("snapr_bin")))
   }
+}
+
+#' inform the user that snap is not installed
+#' @keywords internal
+#' @noRd
+no_snap_inform <- function() {
+  cli::cli_inform(
+    c(
+      "!" = "Snap gpt executable not found.",
+      "i" = "Here are your options:",
+      ">" = "1. Install snap with:",
+      " " = cli::code_highlight("snapr::install_snap()"),
+      ">" = "2. Manually install snap from
+            {.url https://step.esa.int/main/download/snap-download/}",
+      " " = "Set the SNAPR_BIN environment in your
+            .Renviron file using:",
+      " " = cli::code_highlight("usethis::edit_r_environ()")
+    )
+  )
 }

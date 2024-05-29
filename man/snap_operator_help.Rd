@@ -6,7 +6,7 @@
 \usage{
 snap_operator_help(
   operator,
-  gpt_path = "/home/hugh/esa-snap/bin/gpt",
+  gpt_path = getOption("snapr_gpt"),
   check_operator = TRUE,
   node = TRUE
 )
