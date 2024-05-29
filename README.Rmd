@@ -38,6 +38,14 @@ You can install the development version of snapr like so:
 ``` r
 #install.packages("pak")
 pak::pkg_install("Permian-Global-Research/snapr")
+library(snapr)
+install_snap()
+
+# This is only needed for pacakge development but also if you want access to the 
+# snappy python library with {reticulate} for example.
+# configure_snappy_python() 
+
+
 ```
 
 ## Example
@@ -46,6 +54,34 @@ This is a basic example which shows you how to solve a common problem:
 
 ```{r example}
 library(snapr)
-## basic example code
+library(terra)
+
+mt_st_helens_s1 <- system.file("s1/mt_st_helens_s1.tif", package = "snapr")
+
+out_file <- tempfile(fileext = ".tif")
+
+sg <- snap_graph(
+  op_read(
+    operator_id = "Reader",
+    file = mt_st_helens_s1
+  ),
+  op_speckle_filter(
+    operator_id = "SpeckleFilter",
+    sourceProduct = "Reader",
+    filter = "Refined Lee"
+  ),
+  op_write(
+    operator_id = "Writer",
+    sourceProduct = "SpeckleFilter",
+    file = out_file,
+    formatName = "GeoTIFF"
+  )
+)
+show_xml(sg)
+
+suppressMessages(run_graph(sg))
+
+plot(rast(mt_st_helens_s1), main = "Original-GRD", col = hcl.colors(100, "batlow"))
+plot(rast(out_file), main = "speckle-filtered", col = hcl.colors(100, "batlow"))
 ```
 
