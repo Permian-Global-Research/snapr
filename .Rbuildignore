@@ -6,3 +6,4 @@
 ^\.lintr$
 ^\.vscode$
 ^LICENSE\.md$
+^data-raw$

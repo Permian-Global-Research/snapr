@@ -21,8 +21,10 @@ Imports:
     tibble,
     xml2
 Suggests: 
+    grDevices,
     reticulate,
     styler,
+    terra,
     testthat (>= 3.0.0),
     usethis
 Config/testthat/edition: 3
