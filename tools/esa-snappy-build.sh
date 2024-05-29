@@ -29,7 +29,7 @@ cp "$ESA_SNAPPY/lib/jpy-0.13.0-cp310-cp310-linux_x86_64.whl" \
 cp -r "$ESA_SNAPPY" "$VENV_LOC"/lib/python*/site-packages
 
 # Run snappy-conf to set up the python module
-"$ESA_SNAP_BIN/snappy-conf" "$HOME/virtualenvs/snap/bin/python" "$VENV_LOC"/lib/python*/site-packages
+"$ESA_SNAP_BIN/snappy-conf" "$VENV_LOC/bin/python" "$VENV_LOC"/lib/python*/site-packages
 
 # Install missing dependencies and pytest
 pip install numpy
