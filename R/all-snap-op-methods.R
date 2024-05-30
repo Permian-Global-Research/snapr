@@ -14,6 +14,7 @@ show_xml <- new_generic("show_xml", "x")
 
 #' print method for snap_graph object
 #' @param x snap_graph object
+#' @param gpt_path character path to gpt executable
 #' @param ... not used
 #' @export
 run_graph <- new_generic("run_graph", "x")
