@@ -8,3 +8,5 @@
 DEV/*
 target.data/*
 .vscode/*
+
+*.aux.xml

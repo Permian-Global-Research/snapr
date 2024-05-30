@@ -27,7 +27,7 @@ join_multilines <- function(vec) {
 #' @return tibble of operators,  descriptions and the associated R function.
 #' @details Where the R function is not available the value is set to NA.
 #' @export
-get_operators <- function(gpt_path = "/home/hugh/esa-snap/bin/gpt") {
+get_operators <- function(gpt_path = getOption("snapr_gpt")) {
   gpt_help <- system2(gpt_path,
     args = c("-h", "2>/dev/null"),
     stdout = TRUE, stderr = FALSE,

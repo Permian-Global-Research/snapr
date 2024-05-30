@@ -4,7 +4,7 @@
 \alias{get_operators}
 \title{function to get the operators from the gpt executable}
 \usage{
-get_operators(gpt_path = "/home/hugh/esa-snap/bin/gpt")
+get_operators(gpt_path = getOption("snapr_gpt"))
 }
 \arguments{
 \item{gpt_path}{character path to the gpt executable}

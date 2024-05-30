@@ -9,14 +9,37 @@
 
 [![Lifecycle:
 experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
-<!-- badges: end --> snapr is a proof of concept R package to interact
-with [The ESA Sentinel Applications Platform
-(SNAP)](https://step.esa.int/main/toolboxes/snap/) from R. SNAP provides
-an impressive set of tools for processing satellite data, many of which
-are not available in the wider R ecosystem. snapr is a wrapper for
-SNAP’s Graph Processing Tool (command line interface) and shares
-similar ambitions to the
+<!-- badges: end -->
+
+snapr is a proof of concept R package to interact with [The ESA Sentinel
+Applications Platform (SNAP)](https://step.esa.int/main/toolboxes/snap/)
+from R. SNAP provides an impressive set of tools for processing
+satellite data, many of which are not available in the wider R
+ecosystem. snapr is a wrapper for SNAP’s Graph Processing Tool (command
+line interface) and shares similar ambitions to the
 [SNAPISTA](https://github.com/snap-contrib/snapista) python library.
+
+*Known Issues:*
+
+  - The package has only been tested on Linux. It should theoretically
+    work on Windows and MacOS but the automated installation of SNAP is
+    not yet supported on MacOS. On MacOS, snap will have to be installed
+    manually and the path to the SNAP bin folder will have to be set
+    with the `SNAPR_BIN` environment variable.
+
+  - The following snap operators are currently not supported:
+
+BandMaths, BandMerge, BandsDifferenceOp, Binning, DecisionTree, Merge,
+Mosaic, Multi-size, PixEx, RemoteExecutionOp, SAR-Mosaic,
+SpectralAngleMapperOp, StatisticsOp, TOPSAR-Merge, Unmix.
+
+To see supported oprators run `snapr::get_operators()`.
+
+  - There is little to no validation or checking on the R side for
+    operators and constructing snap graphs. This is something that I
+    believe R will be very well suited to but it is not yet implemented.
+    Therefore we must rely on the somewhat alarming/cryptic messages for
+    the SNAP command line interface.
 
 ## Installation
 
@@ -74,7 +97,7 @@ show_xml(sg)
 #>     <operator>Read</operator>
 #>     <sources/>
 #>     <parameters>
-#>       <file>/tmp/Rtmpa7Yq0I/temp_libpath18d5df6221ad/snapr/s1/mt_st_helens_s1.tif</file>
+#>       <file>/tmp/Rtmpq5pGRz/temp_libpath3c4f3fb1e084/snapr/s1/mt_st_helens_s1.tif</file>
 #>       <formatName/>
 #>       <pixelRegion/>
 #>       <geometryRegion/>
@@ -109,7 +132,7 @@ show_xml(sg)
 #>       <sourceProduct refid="SpeckleFilter"/>
 #>     </sources>
 #>     <parameters>
-#>       <file>/tmp/RtmpqoMqUj/file199cc50ef9a43.tif</file>
+#>       <file>/tmp/RtmpfuqYhT/file2423e5474d882.tif</file>
 #>       <formatName>GeoTIFF</formatName>
 #>       <deleteOutputOnFailure>true</deleteOutputOnFailure>
 #>       <writeEntireTileRows>false</writeEntireTileRows>
@@ -120,13 +143,18 @@ show_xml(sg)
 
 suppressMessages(run_graph(sg))
 
-plot(rast(mt_st_helens_s1), main = "Original-GRD", col = hcl.colors(100, "batlow"))
+all_bands <- c(rast(mt_st_helens_s1), rast(out_file))
+names(all_bands) <- c(
+  "Original-VH", "Original-VV",
+  "speckle-filter-VH", "speckle-filter-VV"
+)
+
+par(mfrow = c(2, 2))
+p <- lapply(all_bands, \(x){
+  title <- names(x)
+  range <- terra::minmax(x, compute = TRUE)
+  plot(x, main = title, col = hcl.colors(100, "mako", rev = TRUE), range = range)
+})
 ```
 
 <img src="man/figures/README-example-1.png" width="100%" />
-
-``` r
-plot(rast(out_file), main = "speckle-filtered", col = hcl.colors(100, "batlow"))
-```
-
-<img src="man/figures/README-example-2.png" width="100%" />
